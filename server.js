@@ -7,6 +7,13 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+const LOG_FILE = 'logs.json';
+
+// Ensure log file exists
+if (!fs.existsSync(LOG_FILE)) {
+  fs.writeFileSync(LOG_FILE, '[]');
+}
+
 app.get('/log', (req, res) => {
   const log = {
     timestamp: new Date().toISOString(),
@@ -14,21 +21,32 @@ app.get('/log', (req, res) => {
     userAgent: req.headers['user-agent']
   };
 
-  fs.readFile('logs.json', 'utf8', (err, data) => {
-    const logs = err ? [] : JSON.parse(data);
+  fs.readFile(LOG_FILE, 'utf8', (err, data) => {
+    let logs = [];
+    try {
+      logs = JSON.parse(data || '[]');
+    } catch (e) {
+      logs = [];
+    }
+
     logs.push(log);
-    fs.writeFile('logs.json', JSON.stringify(logs, null, 2), () => {});
+    fs.writeFile(LOG_FILE, JSON.stringify(logs, null, 2), () => {});
   });
 
   res.status(200).json({ message: 'Logged successfully' });
 });
 
 app.get('/logs', (req, res) => {
-  fs.readFile('logs.json', 'utf8', (err, data) => {
+  fs.readFile(LOG_FILE, 'utf8', (err, data) => {
     if (err) return res.status(500).json({ error: 'Unable to read logs' });
-    const logs = JSON.parse(data);
-    res.json({ count: logs.lenght });
+
+    let logs = [];
+    try {
+      logs = JSON.parse(data);
+    } catch (e) {
+      return res.status(500).json({ error: 'Corrupted log file' });
+    }
+
+    res.json({ count: logs.length, logs });
   });
 });
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
