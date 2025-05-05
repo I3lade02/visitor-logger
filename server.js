@@ -50,3 +50,5 @@ app.get('/logs', (req, res) => {
     res.json({ count: logs.length, logs });
   });
 });
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
