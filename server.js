@@ -26,7 +26,8 @@ app.get('/log', (req, res) => {
 app.get('/logs', (req, res) => {
   fs.readFile('logs.json', 'utf8', (err, data) => {
     if (err) return res.status(500).json({ error: 'Unable to read logs' });
-    res.json(JSON.parse(data));
+    const logs = JSON.parse(data);
+    res.json({ count: logs.lenght });
   });
 });
 
